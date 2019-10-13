@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+<title>Michael Lu  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3: PathTracer</h1>
+    <h2 align="middle">Michael Lu</h2>
+
+    <h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+        <p>For reflection, I simply negate the x and y coordinate values to reflect across the normal. For refraction, I convert to spherical coordinates in order to generate the appropriate refraction ray, scaled by the ior variable depending on whether the ray enters or leaves the object. For the Mirror BDSF, I reflect the incoming ray and then return the reflectance scaled by the cosine term. For the Glass BDSF, if the ray does not refract, it reflects, otherwise I calculate the Fresnel coefficient and reflect or refract probabilistically.</p>
+
+        <p>Also I have no idea why my refraction looks like this. I've spent a long time trying to figure out why but to no avail.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/1_spheres_0.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 0 (-s 64 -l 4)</figcaption>
+                    <td align="middle">
+                    <img src="images/1_spheres_1.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 1 (-s 64 -l 4)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/1_spheres_2.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 2 (-s 64 -l 4)</figcaption>
+                    <td align="middle">
+                    <img src="images/1_spheres_3.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 3 (-s 64 -l 4)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/1_spheres_4.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 4 (-s 64 -l 4)</figcaption>
+                    <td align="middle">
+                    <img src="images/1_spheres_5.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 5 (-s 64 -l 4)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/1_spheres_100.png" width="480px" />
+                    <figcaption align="middle">Spheres: depth 100 (-s 64 -l 4)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>At depth zero, we have the direct light sources. At depth 1, we add the one bounce non-delta surface raytrace paths. At depth 2, we add the two bounce non-delta surfaces and reflective surfaces. At depth 3, we add refraction, as well as the two bounce paths off of the reflective surface. At depth 4, we get the paths that trace through the refractive object. Afterwards, we fill out the lighting, and by depth 100, we've probably reached convergence.
+
+    <h2 align="middle">Part 2: Microfacet Material</h2>
+        <p>I simply applied each of the formulas in the spec for F and D. For sampling, I generated a sample for theta and phi using the inversion method and computed the associated incoming ray, applied the change of variable for the pdf, and returned the corresponding radiance value.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/2_dragon_0005.png" width="480px" />
+                    <figcaption align="middle">Dragon: alpha 0.005 (-s 128 -l 1 -m 5)</figcaption>
+                    <td align="middle">
+                    <img src="images/2_dragon_005.png" width="480px" />
+                    <figcaption align="middle">Dragon: alpha 0.05 (-s 128 -l 1 -m 5)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/2_dragon_025.png" width="480px" />
+                    <figcaption align="middle">Dragon: alpha 0.25 (-s 128 -l 1 -m 5)</figcaption>
+                    <td align="middle">
+                    <img src="images/2_dragon_05.png" width="480px" />
+                    <figcaption align="middle">Dragon: alpha 0.5 (-s 128 -l 1 -m 5)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>The lower alpha value results in a glossier surface on the dragon, whereas a higher alpha value corresponds to a shinier diffuse surface.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/2_bunny_chs.png" width="480px" />
+                    <figcaption align="middle">Bunny: cosine hemisphere sampling (-s 64 -l 1 -m 5)</figcaption>
+                    <td align="middle">
+                    <img src="images/2_bunny_is.png" width="480px" />
+                    <figcaption align="middle">Dragon: importance sampling (-s 64 -l 1 -m 5)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>Since all raytrace paths originate from a light source, all samples contribute to the surface radiance. In the cosine hemisphere sampling, samples are generated randomly, leading to some samples contributing nothing, which accounts for the high variance and noise.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/2_spheres.png" width="480px" />
+                    <figcaption align="middle">Spheres (-s 64 -l 1 -m 5)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>I just used the scene with the aluminum and silver spheres.</p>
+
+    <h2 align="middle">Part 3: Environment Map Lights</h2>
+        <p>To normalize the environment map pdf, I simply looped over the map and divided each element by the sum of all the elements. For the cumulative marginal distribution, I kept a running sum and kept track of the sums at the end of each row. For the conditional distribution, I simply looped twice over each row to compute the total in each row and then to compute the conditional distributions. For both uniform and importance sampling, I simply followed the spec instructions step by step using all the helper functions along the way.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/3_grace.jpg" width="480px" />
+                    <figcaption align="middle">Grace Environment Lights</figcaption>
+                    <td align="middle">
+                    <img src="images/3_probability_debug.png" width="480px" />
+                    <figcaption align="middle">Probability Distribution for grace.exr</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/3_bunny_us.png" width="480px" />
+                    <figcaption align="middle">Unlit bunny: Uniform Sampling (-s 4 -l 64)</figcaption>
+                    <td align="middle">
+                    <img src="images/3_bunny_is.png" width="480px" />
+                    <figcaption align="middle">Unlit bunny: Importance Sampling (-s 4 -l 64)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/3_bunny_cu_us.png" width="480px" />
+                    <figcaption align="middle">Unlit copper bunny: Uniform Sampling (-s 4 -l 64)</figcaption>
+                    <td align="middle">
+                    <img src="images/3_bunny_cu_is.png" width="480px" />
+                    <figcaption align="middle">Unlit copper bunny: Importance Sampling (-s 4 -l 64)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>In both the unlit bunny scenes, the uniform sampling renders have a significant amount of white noise that is absent from the importance sampled renders. They are also darker in general and have less apparent shadows because not all of the sampled rays are directed towards light sources and therefor will not contribute to the overall incoming radiance of each raycast.</p>
+
+    <h2 align="middle">Part 4: Depth of Field</h2>
+        <p>I simply computed the pLens and pFocus based on the sampled values and then returned the ray that extends from the lens point to the focus point.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/4_dragon_d17.png" width="480px" />
+                    <figcaption align="middle">Dragon: focus depth 1.7 (-s 64 -l 4 -m 5 -b 0.0883883)</figcaption>
+                    <td align="middle">
+                    <img src="images/4_dragon_d19.png" width="480px" />
+                    <figcaption align="middle">Dragon: focus depth 1.9 (-s 64 -l 4 -m 5 -b 0.0883883)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/4_dragon_d22.png" width="480px" />
+                    <figcaption align="middle">Dragon: focus depth 2.2 (-s 64 -l 4 -m 5 -b 0.0883883)</figcaption>
+                    <td align="middle">
+                    <img src="images/4_dragon_d25.png" width="480px" />
+                    <figcaption align="middle">Dragon: focus depth 2.5 (-s 64 -l 4 -m 5 -b 0.0883883)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/4_dragon_a05.png" width="480px" />
+                    <figcaption align="middle">Dragon: aperture size 0.05 (-s 64 -l 4 -m 5 -d 2.5)</figcaption>
+                    <td align="middle">
+                    <img src="images/4_dragon_d25.png" width="480px" />
+                    <figcaption align="middle">Dragon: aperture size 0.0833833 (-s 64 -l 4 -m 5 -d 2.5)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/4_dragon_a15.png" width="480px" />
+                    <figcaption align="middle">Dragon: aperture size 0.15 (-s 64 -l 4 -m 5 -d 2.5)</figcaption>
+                    <td align="middle">
+                    <img src="images/4_dragon_a25.png" width="480px" />
+                    <figcaption align="middle">Dragon: aperture size 0.25 (-s 64 -l 4 -m 5 -d 2.5)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+    <h2 align="middle">Part 5: Shaders</h2>
+        <a href="gl/index.html">Link to my gl directory!</a>
+        <p>Vertex shaders compute the location of the vertices on the screen and fragment shaders compute the color of the pixels of a triangle on the screen based on the lighting and material properties in the scene.</p>
+
+        <p>In the Blinn-Phong model, we basically superpose ambient, diffuse, and specular lighting to imitate realistic lighting effects on objects.</p>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/5_bp_a.png" width="480px" />
+                    <figcaption align="middle">Blinn-Phong shading model (ambient only)</figcaption>
+                    <td align="middle">
+                    <img src="images/5_bp_d.png" width="480px" />
+                    <figcaption align="middle">Blinn-Phong shading model (diffuse only)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/5_bp_s.png" width="480px" />
+                    <figcaption align="middle">Blinn-Phong shading model (specular only)</figcaption>
+                    <td align="middle">
+                    <img src="images/5_bp.png" width="480px" />
+                    <figcaption align="middle">Blinn-Phong shading model</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <div align="center">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle">
+                    <img src="images/5_4b.png" width="480px" />
+                    <figcaption align="middle">Bump mapping (256 components)</figcaption>
+                    <td align="middle">
+                    <img src="images/5_4d.png" width="480px" />
+                    <figcaption align="middle">Displacement mapping (256 components)</figcaption>
+                </tr>
+                <br>
+                <tr>
+                    <td align="middle">
+                    <img src="images/5_4b_64.png" width="480px" />
+                    <figcaption align="middle">Bump mapping (64 components)</figcaption>
+                    <td align="middle">
+                    <img src="images/5_4d_64.png" width="480px" />
+                    <figcaption align="middle">Displacement mapping (64 components)</figcaption>
+                </tr>
+            </table>
+        </div>
+
+        <p>Bump mapping changes the normal vector for vertices on the surface, so that lighting calculations account for surface bumps even though the actual surface bumps don't exist. Displacement mapping additionally moves the position of the vertices to accurately map and resemble the textured surface. In both mapping types, the surface appears smoother when decreasing the number of components.</p>
+
+        <p>For the custom shader, I just added the pulsing wave effect to the displacement mapping and increased the components on mesh.</p>
+</div>
+</body>
+</html>
+
+
+
+
